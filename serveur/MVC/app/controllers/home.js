@@ -11,13 +11,10 @@ module.exports = (app) => {
   app.use('/', router);
 };
 
-router.get('/', (req, res, next) => {
-  Article.find((err, articles) => {
+router.get('/scoreboard', (req, res, next) => {
+  User.find({}, 'username level currentXP xpMax', (err, dbuser) => {
     if (err) return next(err);
-    res.render('index', {
-      title: 'Generator-Express MVC',
-      articles: articles
-    });
+    res.json(dbuser);
   });
 });
 
@@ -25,7 +22,7 @@ router.post('/user', (req, res, next) => {
   const playload = req.body;
   let user = new User({
     username: playload.username,
-    score: 0,
+    level: 0,
     currentXP: 0,
     xpMax: 0
   });
@@ -49,7 +46,7 @@ router.post('/init', (req, res) => {
       .then((data) => {
         user = new User({
           username: data.username,
-          score: level,
+          level: level,
           currentXP: 0,
           xpMax: Math.pow(2,level) * 1000
         })
@@ -57,19 +54,38 @@ router.post('/init', (req, res) => {
           if (err) {
             res.send('already stored');
           } else {
-            //res.send('user created');
+            
           }
         });
       })
       .catch((err) => console.log(err));
   }
+  //res.send('user created');
 });
 router.post('/battle',(req, res) => {
   const payload = req.body;
-  let user1 = db.collection('users').find({"username": payload.user1});
-  let user2 = db.collection('users').find({"username": payload.user2});
+
+  User.find({"username": { $in: [payload.user1, payload.user2 ]}},'username level currentXP xpMax',(err,dbuser) => {
+    if (err) return next(err);
+
+    let user1 = new User({
+      username: dbuser[0].username,
+      level: dbuser[0].level,
+      currentXP: dbuser[0].currentXP,
+      xpMax: dbuser[0].xpMax
+    });
+    let user2 = new User({
+      username: dbuser[1].username,
+      level: dbuser[1].level,
+      currentXP: dbuser[1].currentXP,
+      xpMax: dbuser[1].xpMax
+    });
+    //fight
+
+    console.log(user1.level);
+  });
 
 
-  console.log(user2);
-  res.send("fight finish");
+  
+ // res.send("fight finish");
 });

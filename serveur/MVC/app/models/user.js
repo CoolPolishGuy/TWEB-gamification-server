@@ -4,7 +4,6 @@ const Schema = mongoose.Schema;
 const UserSchema = new Schema({
   username: {type: String, unique: true},
   level: Number,
-  score: Number,
   currentXP: Number,
   xpMax: Number
 });

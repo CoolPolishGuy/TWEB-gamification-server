@@ -2,7 +2,7 @@ const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
 const User = mongoose.model('User');
-const Batlle = mongoose.model('Battle');
+const Battle = mongoose.model('Battle');
 const randomUser = require('random-user');
 const Chance = require('chance');
 
@@ -48,13 +48,13 @@ router.post('/init', (req, res) => {
           username: data.username,
           level: level,
           currentXP: 0,
-          xpMax: Math.pow(2,level) * 1000
+          xpMax: Math.pow(2, level) * 1000
         })
         user.save(function (err, user) {
           if (err) {
             res.send('already stored');
           } else {
-            
+
           }
         });
       })
@@ -62,30 +62,69 @@ router.post('/init', (req, res) => {
   }
   //res.send('user created');
 });
-router.post('/battle',(req, res) => {
+router.post('/battle', (req, res) => {
   const payload = req.body;
 
-  User.find({"username": { $in: [payload.user1, payload.user2 ]}},'username level currentXP xpMax',(err,dbuser) => {
+  User.find({ "username": { $in: [payload.user1, payload.user2] } }, 'username level currentXP xpMax', (err, dbuser) => {
     if (err) return next(err);
 
-    let user1 = new User({
-      username: dbuser[0].username,
-      level: dbuser[0].level,
-      currentXP: dbuser[0].currentXP,
-      xpMax: dbuser[0].xpMax
-    });
-    let user2 = new User({
-      username: dbuser[1].username,
-      level: dbuser[1].level,
-      currentXP: dbuser[1].currentXP,
-      xpMax: dbuser[1].xpMax
-    });
-    //fight
+    let winner;
+    let looser;
 
-    console.log(user1.level);
+    var chance = new Chance(Math.random);
+    let decision = chance.integer({ min: 0, max: 6 });
+
+    if (decision < 4) {
+      newXP = dbuser[0].currentXP + 1000;
+      levelUP = dbuser[0].level;
+      xpMax = dbuser[0].xpMax;
+      if (newXP >= dbuser[0].xpMax) {
+        levelUP = dbuser[0].level++;
+        xpMax = dbuser[1].xpMax * 2;
+      }
+      winner = new User({
+        username: dbuser[0].username,
+        level: levelUP,
+        currentXP: newXP,
+        xpMax: xpMax
+      });
+      looser = new User({
+        username: dbuser[1].username,
+        level: dbuser[1].level,
+        currentXP: dbuser[1].currentXP,
+        xpMax: dbuser[1].xpMax
+      });
+    } else {
+      //update des valeurs du winner
+      newXP = dbuser[1].currentXP + 1000;
+      levelUP = dbuser[1].level;
+      xpMax = dbuser[1].xpMax;
+      if (newXP >= dbuser[1].xpMax) {
+        levelUP = dbuser[1].level++;
+        xpMax = dbuser[1].xpMax *2;
+      }
+      winner = new User({
+        username: dbuser[1].username,
+        level: dbuser[1].level,
+        currentXP: dbuser[1].currentXP,
+        xpMax: dbuser[1].xpMax
+      });
+      looser = new User({
+        username: dbuser[0].username,
+        level: dbuser[0].level,
+        currentXP: dbuser[0].currentXP,
+        xpMax: dbuser[0].xpMax
+      });
+    }
+    User.findOneAndUpdate({ "username": winner.username }, { $inc: { level: levelUP, currentXP: newXP, xpMax: xpMax } }, (err, user) => {
+      if (err) {
+        res.send(err)
+      } else {
+        const battle = new Battle({winner : winner.username, looser: looser.username, xpWinner: winner.currentXP, 
+          xpLooser : looser.currentXP,levelWinner: winner.level, levelLooser: looser.level});
+        battle.save();
+        res.send("fight finish");
+      }
+    });  
   });
-
-
-  
- // res.send("fight finish");
 });

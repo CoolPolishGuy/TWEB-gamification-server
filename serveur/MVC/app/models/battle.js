@@ -2,13 +2,12 @@ const mongoose = require('mongoose');
 const Schema = mongoose.Schema;
 
 const BattleSchema = new Schema({
-  user1 : String,
-  user2 : String,
   winner : String,
+  looser : String,
   xpWinner : Number,
-  xpLoser : Number,
+  xpLooser : Number,
   levelWinner: Number,
-  levelLoser: Number
+  levelLooser: Number
 
 });
 

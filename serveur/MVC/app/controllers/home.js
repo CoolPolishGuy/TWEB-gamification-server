@@ -73,20 +73,20 @@ router.post('/battle', (req, res) => {
 
     var chance = new Chance(Math.random);
     let decision = chance.integer({ min: 0, max: 6 });
-
+    //winner is player 0
     if (decision < 4) {
       newXP = dbuser[0].currentXP + 1000;
       levelUP = dbuser[0].level;
-      xpMax = dbuser[0].xpMax;
-      if (newXP >= dbuser[0].xpMax) {
+      newxpMax = dbuser[0].xpMax;
+      if (newXP >= newxpMax) {
         levelUP = dbuser[0].level++;
-        xpMax = dbuser[1].xpMax * 2;
+        newxpMax = dbuser[0].xpMax * 2;
       }
       winner = new User({
         username: dbuser[0].username,
         level: levelUP,
         currentXP: newXP,
-        xpMax: xpMax
+        xpMax: newxpMax
       });
       looser = new User({
         username: dbuser[1].username,
@@ -94,20 +94,24 @@ router.post('/battle', (req, res) => {
         currentXP: dbuser[1].currentXP,
         xpMax: dbuser[1].xpMax
       });
+      console.log(newXP);
+      console.log(levelUP);
+      console.log(newxpMax);
+    //winner is player 1
     } else {
       //update des valeurs du winner
       newXP = dbuser[1].currentXP + 1000;
       levelUP = dbuser[1].level;
-      xpMax = dbuser[1].xpMax;
-      if (newXP >= dbuser[1].xpMax) {
+      newxpMax = dbuser[1].xpMax;
+      if (newXP >= newxpMax) {
         levelUP = dbuser[1].level++;
-        xpMax = dbuser[1].xpMax *2;
+        newxpMax = dbuser[1].xpMax *2;
       }
       winner = new User({
         username: dbuser[1].username,
-        level: dbuser[1].level,
-        currentXP: dbuser[1].currentXP,
-        xpMax: dbuser[1].xpMax
+        level: levelUP,
+        currentXP: newXP,
+        xpMax: newxpMax
       });
       looser = new User({
         username: dbuser[0].username,
@@ -115,8 +119,11 @@ router.post('/battle', (req, res) => {
         currentXP: dbuser[0].currentXP,
         xpMax: dbuser[0].xpMax
       });
+      console.log(newXP);
+      console.log(levelUP);
+      console.log(newxpMax);
     }
-    User.findOneAndUpdate({ "username": winner.username }, { $inc: { level: levelUP, currentXP: newXP, xpMax: xpMax } }, (err, user) => {
+    User.findOneAndUpdate({ "username": winner.username }, { level: levelUP, currentXP: newXP, xpMax: newxpMax }, (err, user) => {
       if (err) {
         res.send(err)
       } else {

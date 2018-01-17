@@ -94,9 +94,6 @@ router.post('/battle', (req, res) => {
         currentXP: dbuser[1].currentXP,
         xpMax: dbuser[1].xpMax
       });
-      console.log(newXP);
-      console.log(levelUP);
-      console.log(newxpMax);
     //winner is player 1
     } else {
       //update des valeurs du winner
@@ -119,9 +116,6 @@ router.post('/battle', (req, res) => {
         currentXP: dbuser[0].currentXP,
         xpMax: dbuser[0].xpMax
       });
-      console.log(newXP);
-      console.log(levelUP);
-      console.log(newxpMax);
     }
     User.findOneAndUpdate({ "username": winner.username }, { level: levelUP, currentXP: newXP, xpMax: newxpMax }, (err, user) => {
       if (err) {
@@ -134,4 +128,8 @@ router.post('/battle', (req, res) => {
       }
     });  
   });
+});
+
+router.get('/listBattles', (req, res) => {
+  
 });

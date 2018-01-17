@@ -1,3 +1,5 @@
+//import { Promise } from 'mongoose';
+
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -5,11 +7,15 @@ const User = mongoose.model('User');
 const Battle = mongoose.model('Battle');
 const randomUser = require('random-user');
 const Chance = require('chance');
+var cors = require('cors');
 
+
+router.use(cors());
 
 module.exports = (app) => {
   app.use('/', router);
 };
+
 
 router.get('/scoreboard', (req, res, next) => {
   User.find({}, 'username level currentXP xpMax', (err, dbuser) => {
@@ -36,7 +42,9 @@ router.post('/user', (req, res, next) => {
 });
 
 router.post('/init', (req, res) => {
+  let tabPromsies;
   for (let i = 0; i < 15; i++) {
+    //let prom = new Promise(
     const playload = req.body;
     var chance = new Chance(Math.random);
     let level = chance.integer({ min: 0, max: 5 });
@@ -59,7 +67,10 @@ router.post('/init', (req, res) => {
         });
       })
       .catch((err) => console.log(err));
+    //);
+    //tabPromsies.push(prom);
   }
+ //Promise.all(tabPromsies).then
   //res.send('user created');
 });
 router.post('/battle', (req, res) => {
@@ -131,5 +142,5 @@ router.post('/battle', (req, res) => {
 });
 
 router.get('/listBattles', (req, res) => {
-  
+
 });

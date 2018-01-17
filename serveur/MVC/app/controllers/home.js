@@ -1,5 +1,3 @@
-//import { Promise } from 'mongoose';
-
 const express = require('express');
 const router = express.Router();
 const mongoose = require('mongoose');
@@ -7,10 +5,10 @@ const User = mongoose.model('User');
 const Battle = mongoose.model('Battle');
 const randomUser = require('random-user');
 const Chance = require('chance');
-var cors = require('cors');
+const cors = require('cors');
 
+router.all('*', cors());
 
-router.use(cors());
 
 module.exports = (app) => {
   app.use('/', router);
@@ -42,36 +40,37 @@ router.post('/user', (req, res, next) => {
 });
 
 router.post('/init', (req, res) => {
-  let tabPromsies;
+  let tabPromsies =[];
   for (let i = 0; i < 15; i++) {
-    //let prom = new Promise(
-    const playload = req.body;
-    var chance = new Chance(Math.random);
-    let level = chance.integer({ min: 0, max: 5 });
-    let user;
-    let randomGuy = randomUser('simple')
+    tabPromsies.push(new Promise((success, fail) => {
+      const playload = req.body;
+      var chance = new Chance(Math.random);
+      let level = chance.integer({ min: 0, max: 5 });
+      let user;
+      let randomGuy = randomUser('simple')
 
-      .then((data) => {
-        user = new User({
-          username: data.username,
-          level: level,
-          currentXP: 0,
-          xpMax: Math.pow(2, level) * 1000
+        .then((data) => {
+          user = new User({
+            username: data.username,
+            level: level,
+            currentXP: 0,
+            xpMax: Math.pow(2, level) * 1000
+          })
+          user.save(function (err, user) {
+            if (err) {
+              res.send('already stored');
+            } else {
+              success();
+            }
+          });
         })
-        user.save(function (err, user) {
-          if (err) {
-            res.send('already stored');
-          } else {
-
-          }
-        });
-      })
-      .catch((err) => console.log(err));
-    //);
-    //tabPromsies.push(prom);
+        .catch((err) => console.log(err));
+      
+    }));
   }
- //Promise.all(tabPromsies).then
-  //res.send('user created');
+  Promise.all(tabPromsies).then(function(){
+    res.send('list created');
+  });
 });
 router.post('/battle', (req, res) => {
   const payload = req.body;
@@ -105,7 +104,7 @@ router.post('/battle', (req, res) => {
         currentXP: dbuser[1].currentXP,
         xpMax: dbuser[1].xpMax
       });
-    //winner is player 1
+      //winner is player 1
     } else {
       //update des valeurs du winner
       newXP = dbuser[1].currentXP + 1000;
@@ -113,7 +112,7 @@ router.post('/battle', (req, res) => {
       newxpMax = dbuser[1].xpMax;
       if (newXP >= newxpMax) {
         levelUP = dbuser[1].level++;
-        newxpMax = dbuser[1].xpMax *2;
+        newxpMax = dbuser[1].xpMax * 2;
       }
       winner = new User({
         username: dbuser[1].username,
@@ -132,15 +131,19 @@ router.post('/battle', (req, res) => {
       if (err) {
         res.send(err)
       } else {
-        const battle = new Battle({winner : winner.username, looser: looser.username, xpWinner: winner.currentXP, 
-          xpLooser : looser.currentXP,levelWinner: winner.level, levelLooser: looser.level});
+        const battle = new Battle({
+          winner: winner.username, looser: looser.username, xpWinner: winner.currentXP,
+          xpLooser: looser.currentXP, levelWinner: winner.level, levelLooser: looser.level
+        });
         battle.save();
         res.send("fight finish");
       }
-    });  
+    });
   });
 });
 
-router.get('/listBattles', (req, res) => {
-
+router.get('/clearData', (req, res) => {
+  mongoose.connection.collections['users'].drop( function(err) {
+    console.log('collection dropped');
+  });
 });

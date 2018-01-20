@@ -5,9 +5,6 @@ const User = mongoose.model('User');
 const Battle = mongoose.model('Battle');
 const randomUser = require('random-user');
 const Chance = require('chance');
-const cors = require('cors');
-
-router.all('*', cors());
 
 
 module.exports = (app) => {
@@ -74,15 +71,25 @@ router.post('/init', (req, res) => {
 });
 router.post('/battle', (req, res) => {
   const payload = req.body;
+  var listUsers = [];
+  var chance = new Chance(Math.random);
+  let opponent = chance.integer({ min: 0, max: 15 });
 
-  User.find({ "username": { $in: [payload.user1, payload.user2] } }, 'username level currentXP xpMax', (err, dbuser) => {
+  //récuperation d'un joueur opposant
+  User.find({}, 'username level currentXP xpMax', (err, dbusers) => {
+    listUsers.push(dbusers[opponent]);
+  });
+
+
+  User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err, dbuser) => {
     if (err) return next(err);
 
     let winner;
     let looser;
-
-    var chance = new Chance(Math.random);
+    let otherGuy;
+    
     let decision = chance.integer({ min: 0, max: 6 });
+      
     //winner is player 0
     if (decision < 4) {
       newXP = dbuser[0].currentXP + 1000;
@@ -99,23 +106,23 @@ router.post('/battle', (req, res) => {
         xpMax: newxpMax
       });
       looser = new User({
-        username: dbuser[1].username,
-        level: dbuser[1].level,
-        currentXP: dbuser[1].currentXP,
-        xpMax: dbuser[1].xpMax
+        username: listUsers[0].username,
+        level: listUsers[0].level,
+        currentXP: listUsers[0].currentXP,
+        xpMax: listUsers[0].xpMax
       });
       //winner is player 1
     } else {
       //update des valeurs du winner
-      newXP = dbuser[1].currentXP + 1000;
-      levelUP = dbuser[1].level;
-      newxpMax = dbuser[1].xpMax;
+      newXP = listUsers[0].currentXP + 1000;
+      levelUP = listUsers[0].level;
+      newxpMax = listUsers[0].xpMax;
       if (newXP >= newxpMax) {
-        levelUP = dbuser[1].level++;
-        newxpMax = dbuser[1].xpMax * 2;
+        levelUP = listUsers[0].level++;
+        newxpMax = listUsers[0].xpMax * 2;
       }
       winner = new User({
-        username: dbuser[1].username,
+        username: listUsers[0].username,
         level: levelUP,
         currentXP: newXP,
         xpMax: newxpMax
@@ -145,5 +152,16 @@ router.post('/battle', (req, res) => {
 router.get('/clearData', (req, res) => {
   mongoose.connection.collections['users'].drop( function(err) {
     console.log('collection dropped');
+  });
+});
+
+router.get('/historyfights', (req, res) => {
+  const payload = req.body;
+  Battle.find({},{winner: payload.winner},(err,battles) =>{
+    if(err) {
+      res.send(err);
+    } else {
+      res.json(battles);
+    }
   });
 });

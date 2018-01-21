@@ -155,9 +155,9 @@ router.get('/clearData', (req, res) => {
   });
 });
 
-router.get('/historyfights', (req, res) => {
+router.post('/historyfights', (req, res) => {
   const payload = req.body;
-  Battle.find({},{winner: payload.winner},(err,battles) =>{
+  Battle.find({$or: [{winner: payload.username},{looser: payload.username}]},'winner looser xpWinner xpLooser levelWinner levelLooser',(err,battles) =>{
     if(err) {
       res.send(err);
     } else {

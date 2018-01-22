@@ -36,7 +36,7 @@ router.post('/user', (req, res, next) => {
   });
 });
 
-router.post('/init', (req, res) => {
+router.get('/init', (req, res) => {
   let tabPromsies =[];
   for (let i = 0; i < 15; i++) {
     tabPromsies.push(new Promise((success, fail) => {
@@ -158,6 +158,7 @@ router.get('/clearData', (req, res) => {
   mongoose.connection.collections['users'].drop( function(err) {
     console.log('collection dropped');
   });
+  res.send("DB cleared");
 });
 
 router.post('/historyfights', (req, res) => {

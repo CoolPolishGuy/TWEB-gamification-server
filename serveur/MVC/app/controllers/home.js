@@ -5,6 +5,7 @@ const User = mongoose.model('User');
 const Battle = mongoose.model('Battle');
 const randomUser = require('random-user');
 const Chance = require('chance');
+let PeopleDb = -1;
 
 
 module.exports = (app) => {
@@ -31,6 +32,7 @@ router.post('/user', (req, res, next) => {
     if (err) {
       res.send('already stored');
     } else {
+      ++PeopleDb;
       res.send('user created');
     }
   });
@@ -66,6 +68,7 @@ router.get('/init', (req, res) => {
     }));
   }
   Promise.all(tabPromsies).then(function(){
+    PeopleDb = PeopleDb + 15;
     res.send('list created');
   });
 });
@@ -73,7 +76,7 @@ router.post('/battle', (req, res) => {
   const payload = req.body;
   var listUsers = [];
   var chance = new Chance(Math.random);
-  let opponent = chance.integer({ min: 0, max: 15 });
+  let opponent = chance.integer({ min: 0, max: PeopleDb });
 
   //récuperation d'un joueur opposant
   User.find({}, 'username level currentXP xpMax', (err, dbusers) => {
@@ -101,7 +104,7 @@ router.post('/battle', (req, res) => {
       levelUP = dbuser[0].level;
       newxpMax = dbuser[0].xpMax;
       if (newXP >= newxpMax) {
-        levelUP = dbuser[0].level++;
+        levelUP = ++dbuser[0].level;
         newxpMax = dbuser[0].xpMax * 2;
       }
       winner = new User({
@@ -123,7 +126,7 @@ router.post('/battle', (req, res) => {
       levelUP = listUsers[0].level;
       newxpMax = listUsers[0].xpMax;
       if (newXP >= newxpMax) {
-        levelUP = listUsers[0].level++;
+        levelUP = ++listUsers[0].level;
         newxpMax = listUsers[0].xpMax * 2;
       }
       winner = new User({

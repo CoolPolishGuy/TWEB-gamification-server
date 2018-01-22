@@ -73,11 +73,16 @@ router.post('/battle', (req, res) => {
   const payload = req.body;
   var listUsers = [];
   var chance = new Chance(Math.random);
-  let opponent = chance.integer({ min: 0, max: 15 });
+  let opponent = 12; //chance.integer({ min: 0, max: 15 });
 
   //récuperation d'un joueur opposant
   User.find({}, 'username level currentXP xpMax', (err, dbusers) => {
-    listUsers.push(dbusers[opponent]);
+    if(dbusers[opponent].username === payload.username) {
+      opponent = (opponent + 1) % 15;
+      listUsers.push(dbusers[opponent]);
+    } else {
+      listUsers.push(dbusers[opponent]);
+    }  
   });
 
 

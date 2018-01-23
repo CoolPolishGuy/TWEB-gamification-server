@@ -23,9 +23,9 @@ router.post('/user', (req, res, next) => {
   const playload = req.body;
   let user = new User({
     username: playload.username,
-    level: 0,
+    level: 1,
     currentXP: 0,
-    xpMax: 0
+    xpMax: 2000
   });
   user.save(function (err, user) {
     if (err) {
@@ -50,7 +50,7 @@ router.get('/init', (req, res) => {
           user = new User({
             username: data.username,
             level: level,
-            currentXP: Math.pow(2, level-1) * 1000,
+            currentXP: Math.pow(2, level - 1) * 1000,
             xpMax: Math.pow(2, level) * 1000
           })
           user.save(function (err, user) {
@@ -72,11 +72,11 @@ router.get('/init', (req, res) => {
 router.post('/battle', (req, res) => {
   const payload = req.body;
   var listUsers = [];
- 
+
   //récuperation d'un joueur opposant
   User.find({}, 'username level currentXP xpMax', (err, dbusers) => {
     var chance = new Chance(Math.random);
-    let PeopleDb = dbusers.length -1;
+    let PeopleDb = dbusers.length - 1;
     let opponent = chance.integer({ min: 0, max: PeopleDb });
 
 
@@ -87,59 +87,68 @@ router.post('/battle', (req, res) => {
     } else {
       listUsers.push(dbusers[opponent]);
     }
-    User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err,dbuser) => {
+    User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err, dbuser) => {
       if (err) return next(err);
 
       let winner;
       let looser;
       let otherGuy;
+      let lowlvl;
+      let highlvl;
 
-      let decision = chance.integer({ min: 0, max: 6 });
 
-      //winner is player 0dbuser
-      if (decision < 4) {
-        newXP = dbuser[0].currentXP + 1000;
-        levelUP = dbuser[0].level;
-        newxpMax = dbuser[0].xpMax;
+      let suppl = Math.abs(dbuser[0].level - listUsers[0].level);
+      highlvl = Math.max(dbuser[0].level, listUsers[0].level) + suppl;
+
+      let decision = chance.integer({ min: 1, max: highlvl });
+      let lowLevelGuy = Math.min(dbuser[0].level, listUsers[0].level) === dbuser[0].level ? dbuser : listUsers;
+      let highLevelGuy = Math.max(dbuser[0].level, listUsers[0].level) === dbuser[0].level ? dbuser : listUsers;
+
+
+      if (decision < Math.min(dbuser[0].level, listUsers[0].level)) {
+
+        newXP = lowLevelGuy[0].currentXP + 1000;
+        levelUP = lowLevelGuy[0].level;
+        newxpMax = lowLevelGuy[0].xpMax;
         if (newXP >= newxpMax) {
-          levelUP = ++dbuser[0].level;
-          newxpMax = dbuser[0].xpMax * 2;
+          levelUP = ++lowLevelGuy[0].level;
+          newxpMax = lowLevelGuy[0].xpMax * 2;
         }
         winner = new User({
-          username: dbuser[0].username,
+          username: lowLevelGuy[0].username,
           level: levelUP,
           currentXP: newXP,
           xpMax: newxpMax
         });
         looser = new User({
-          username: listUsers[0].username,
-          level: listUsers[0].level,
-          currentXP: listUsers[0].currentXP,
-          xpMax: listUsers[0].xpMax
+          username: highLevelGuy[0].username,
+          level: highLevelGuy[0].level,
+          currentXP: highLevelGuy[0].currentXP,
+          xpMax: highLevelGuy[0].xpMax
         });
-        //winner is player 1
+
       } else {
-        //update des valeurs du winner
-        newXP = listUsers[0].currentXP + 1000;
-        levelUP = listUsers[0].level;
-        newxpMax = listUsers[0].xpMax;
+        newXP = highLevelGuy[0].currentXP + 1000;
+        levelUP = highLevelGuy[0].level;
+        newxpMax = highLevelGuy[0].xpMax;
         if (newXP >= newxpMax) {
-          levelUP = ++listUsers[0].level;
-          newxpMax = listUsers[0].xpMax * 2;
+          levelUP = ++highLevelGuy[0].level;
+          newxpMax = highLevelGuy[0].xpMax * 2;
         }
         winner = new User({
-          username: listUsers[0].username,
+          username: highLevelGuy[0].username,
           level: levelUP,
           currentXP: newXP,
           xpMax: newxpMax
         });
         looser = new User({
-          username: dbuser[0].username,
-          level: dbuser[0].level,
-          currentXP: dbuser[0].currentXP,
-          xpMax: dbuser[0].xpMax
+          username: lowLevelGuy[0].username,
+          level: lowLevelGuy[0].level,
+          currentXP: lowLevelGuy[0].currentXP,
+          xpMax: lowLevelGuy[0].xpMax
         });
       }
+
       User.findOneAndUpdate({ "username": winner.username }, { level: levelUP, currentXP: newXP, xpMax: newxpMax }, (err, user) => {
         if (err) {
           res.send(err)

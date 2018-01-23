@@ -42,7 +42,7 @@ router.get('/init', (req, res) => {
     tabPromsies.push(new Promise((success, fail) => {
       const playload = req.body;
       var chance = new Chance(Math.random);
-      let level = chance.integer({ min: 0, max: 5 });
+      let level = chance.integer({ min: 1, max: 5 });
       let user;
       let randomGuy = randomUser('simple')
 
@@ -50,7 +50,7 @@ router.get('/init', (req, res) => {
           user = new User({
             username: data.username,
             level: level,
-            currentXP: 0,
+            currentXP: Math.pow(2, level-1) * 1000,
             xpMax: Math.pow(2, level) * 1000
           })
           user.save(function (err, user) {
@@ -87,7 +87,7 @@ router.post('/battle', (req, res) => {
     } else {
       listUsers.push(dbusers[opponent]);
     }
-    User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err, ) => {
+    User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err,dbuser) => {
       if (err) return next(err);
 
       let winner;

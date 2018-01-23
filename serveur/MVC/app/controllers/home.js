@@ -159,6 +159,8 @@ router.post('/battle', (req, res) => {
 router.get('/clearData', (req, res) => {
   mongoose.connection.collections['users'].drop(function (err) {
   });
+  mongoose.connection.collections['battles'].drop(function (err) {
+  });
   res.send("DB cleared");
 });
 

@@ -81,13 +81,13 @@ router.post('/battle', (req, res) => {
 
 
 
-    if (dbusers[opponent].username == payload.username) {
-      opponent = (opponent + 1) % 15;
+    if (dbusers[opponent].username === payload.user1) {
+      opponent = (opponent + 1) % PeopleDb;
       listUsers.push(dbusers[opponent]);
     } else {
       listUsers.push(dbusers[opponent]);
     }
-    User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err, dbuser) => {
+    User.find({ "username": payload.user1 }, 'username level currentXP xpMax', (err, ) => {
       if (err) return next(err);
 
       let winner;
@@ -96,7 +96,7 @@ router.post('/battle', (req, res) => {
 
       let decision = chance.integer({ min: 0, max: 6 });
 
-      //winner is player 0
+      //winner is player 0dbuser
       if (decision < 4) {
         newXP = dbuser[0].currentXP + 1000;
         levelUP = dbuser[0].level;

@@ -27,11 +27,17 @@ router.post('/user', (req, res, next) => {
     currentXP: 0,
     xpMax: 2000
   });
-  user.save(function (err, user) {
-    if (err) {
+  User.findOne({ "username": playload.username }, 'username level currentXP xpMax', (err, data) => {
+    if (data) {
       res.send('already stored');
     } else {
-      res.send('user created');
+      user.save(function (err, user) {
+        if (err) {
+          res.send('already stored');
+        } else {
+          res.send('user created');
+        }
+      });
     }
   });
 });

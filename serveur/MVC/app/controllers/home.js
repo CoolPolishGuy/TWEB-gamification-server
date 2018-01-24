@@ -88,7 +88,7 @@ router.post('/battle', (req, res) => {
 
 
     if (dbusers[opponent].username == payload.user1) {
-      opponent = (opponent + 1) % (PeopleDb +1);
+      opponent = (opponent + 1) % (PeopleDb + 1);
       listUsers.push(dbusers[opponent]);
     } else {
       listUsers.push(dbusers[opponent]);
@@ -103,28 +103,27 @@ router.post('/battle', (req, res) => {
       let highlvl;
       let highLevelGuy;
       let lowLevelGuy;
+      let decision;
 
-      let suppl = Math.abs(dbuser[0].level - listUsers[0].level);
-      highlvl = Math.max(dbuser[0].level, listUsers[0].level) + suppl;
-      lowlvl= Math.min(dbuser[0].level, listUsers[0].level);
+      highlvl = Math.max(dbuser[0].level, listUsers[0].level);
+      lowlvl = Math.min(dbuser[0].level, listUsers[0].level);
 
-      let decision = chance.integer({ min: 1, max: highlvl });
-
-      if(dbuser[0].level === listUsers[0].level){
-         lowLevelGuy = listUsers;
-         highLevelGuy = dbuser;
-         if(lowlvl ===1){
-          decision = chance.integer({ min: 0, max: 1 });
-         }
-       
-      }else{
-         lowLevelGuy = lowlvl === dbuser[0].level ? dbuser : listUsers;
-         highLevelGuy = Math.max(dbuser[0].level, listUsers[0].level) === dbuser[0].level ? dbuser : listUsers;
+      if (dbuser[0].level === listUsers[0].level) {
+        lowLevelGuy = listUsers;
+        highLevelGuy = dbuser;
+      } else {
+        lowLevelGuy = lowlvl === dbuser[0].level ? dbuser : listUsers;
+        highLevelGuy = highlvl === dbuser[0].level ? dbuser : listUsers;
       }
-      
 
+      //compute highlvl interval
+      let maxBound = ((highlvl / lowlvl) * 100) + 99;
 
-      if (decision <= lowlvl) {
+      // 0 to 99 and 100 to MaxBound
+      decision = chance.integer({ min: 0, max: maxBound });
+
+      // 0 to 99 for lowlvlGuy and 100 to MaxBound for highlvlGuy
+      if (decision < 100) {
 
         newXP = lowLevelGuy[0].currentXP + 1000;
         levelUP = lowLevelGuy[0].level;
